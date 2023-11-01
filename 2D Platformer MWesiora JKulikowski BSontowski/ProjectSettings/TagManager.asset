@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - Bonus
+  - End-of-level
   layers:
   - Default
   - TransparentFX

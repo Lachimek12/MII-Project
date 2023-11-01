@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -15,6 +16,7 @@ public class PlayerController : MonoBehaviour
     private bool isWalking = false;
     private bool isFacingRight = true;
     private int score = 0;
+    public TMP_Text endGameText;
 
     private void Awake()
     {
@@ -60,6 +62,11 @@ public class PlayerController : MonoBehaviour
         animator.SetBool("isGrounded", isGrounded());
         animator.SetBool("isWalking", isWalking);
 
+        if (gameObject.transform.position.y < -15) //check if player fell off the map
+        {
+            gameObject.transform.position = new Vector3(-22.73f, -1.98f, 0);
+        }
+
         //Debug.DrawRay(transform.position, rayLength * Vector3.down, Color.white, 1.0f, false);
     }
 
@@ -97,8 +104,13 @@ public class PlayerController : MonoBehaviour
         if (other.CompareTag("Bonus"))
         {
             score += 1;
-            //Debug.Log("Score " + score);
+            Debug.Log("Score " + score);
             other.gameObject.SetActive(false);
+        }
+        else if (other.CompareTag("End-of-level"))
+        {
+            endGameText.gameObject.SetActive(true);
+            endGameText.text = "Gratulacje, zdoby³eœ " + score.ToString() + " punktów!";
         }
     }
 }
