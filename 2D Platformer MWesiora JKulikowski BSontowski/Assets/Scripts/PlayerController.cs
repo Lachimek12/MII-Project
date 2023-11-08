@@ -6,8 +6,8 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement parameters")]
-    [Range(0.01f, 20.0f)] [SerializeField] private float moveSpeed = 0.1f; //moving speed of the player
-    [Range(0.01f, 20.0f)] [SerializeField] private float jumpForce = 6.0f;
+    [Range(0.01f, 20.0f)][SerializeField] private float moveSpeed = 0.1f; //moving speed of the player
+    [Range(0.01f, 20.0f)][SerializeField] private float jumpForce = 6.0f;
     private Rigidbody2D rigidBody;
     public LayerMask groundLayer;
     const float rayLength = 1.5f;
@@ -15,6 +15,8 @@ public class PlayerController : MonoBehaviour
     private Animator animator;
     private bool isWalking = false;
     private bool isFacingRight = true;
+    private int moveInputX = 0;
+    private bool jumpInput = false;
     private int score = 0;
     public TMP_Text endGameText;
 
@@ -27,36 +29,55 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        isWalking = false;
-
         if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
         {
-            transform.Translate(moveSpeed * Time.deltaTime, 0.0f, 0.0f, Space.World);
-            isWalking = true;
-            if (!isFacingRight)
-            {
-                Flip();
-            }
+            moveInputX = 1;
         }
         else if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
         {
-            transform.Translate(-moveSpeed * Time.deltaTime, 0.0f, 0.0f, Space.World);
-            isWalking = true;
-            if (isFacingRight)
-            {
-                Flip();
-            }
+            moveInputX = -1;
+        }
+        else
+        {
+            moveInputX = 0;
         }
 
         if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space))
         {
+            jumpInput = true;
+        }
+    }
+    void FixedUpdate()
+    {
+        isWalking = false;
+
+        Vector2 moveVectorX = new Vector2(1.0f, 0.0f);
+        rigidBody.velocity = rigidBody.velocity * new Vector2(0.0f, 1.0f) + moveVectorX * moveSpeed * moveInputX;
+        if (moveInputX != 0)
+        {
+            isWalking = true;
+        }
+
+        if (!isFacingRight && moveInputX > 0)
+        {
+            Flip();
+        }
+
+        if (isFacingRight && moveInputX < 0)
+        {
+            Flip();
+        }
+
+        if (jumpInput)
+        {
             Jump();
+            jumpInput = false;
         }
 
         animator.SetBool("isGrounded", isGrounded());
@@ -83,7 +104,7 @@ public class PlayerController : MonoBehaviour
             canDoubleJump = true;
             //Debug.Log("jumpung");
         }
-        else if(canDoubleJump == true)
+        else if (canDoubleJump == true)
         {
             rigidBody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             canDoubleJump = false;
