@@ -16,12 +16,17 @@ public class PlayerController : MonoBehaviour
     private bool isWalking = false;
     private bool isFacingRight = true;
     private int score = 0;
+    private int lives = 3;
+    private Vector2 startPosition;
+    private int keysFound = 0;
+    private int keysNumber = 3;
     public TMP_Text endGameText;
 
     private void Awake()
     {
         rigidBody = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        startPosition = transform.position;
     }
 
     // Start is called before the first frame update
@@ -61,11 +66,6 @@ public class PlayerController : MonoBehaviour
 
         animator.SetBool("isGrounded", isGrounded());
         animator.SetBool("isWalking", isWalking);
-
-        if (gameObject.transform.position.y < -15) //check if player fell off the map
-        {
-            gameObject.transform.position = new Vector3(-22.73f, -1.98f, 0);
-        }
 
         //Debug.DrawRay(transform.position, rayLength * Vector3.down, Color.white, 1.0f, false);
     }
@@ -109,8 +109,55 @@ public class PlayerController : MonoBehaviour
         }
         else if (other.CompareTag("End-of-level"))
         {
-            endGameText.gameObject.SetActive(true);
-            endGameText.text = "Gratulacje, zdoby³eœ " + score.ToString() + " punktów!";
+            if (keysNumber == keysFound)
+            {
+                Debug.Log("Wygrales");
+                endGameText.gameObject.SetActive(true);
+                endGameText.text = "Gratulacje, zdoby³eœ " + score.ToString() + " punktów!";
+            }
+            else
+            {
+                Debug.Log("za malo kluczy");
+            }
+        }
+        else if (other.CompareTag("Enemy"))
+        {
+            if (transform.position.y > other.gameObject.transform.position.y)
+            {
+                score += 2;
+                Debug.Log("Killed an enemy");
+            }
+            else
+            {
+                Death();
+            }
+        }
+        else if (other.CompareTag("Key"))
+        {
+            keysFound++;
+            other.gameObject.SetActive(false);
+            Debug.Log("Zebrano klucz");
+        }
+        else if (other.CompareTag("Heart"))
+        {
+            lives++;
+            other.gameObject.SetActive(false);
+            Debug.Log("Zebrano HAPE");
+        }
+        else if (other.CompareTag("FallLevel"))
+        {
+            Death();
+        }
+    }
+
+    private void Death()
+    {
+        lives--;
+        rigidBody.velocity = new Vector2(0.0f, 0.0f);
+        transform.position = startPosition;
+        if (lives <= 0)
+        {
+            Debug.Log("Umarl smiercia tera-giczna");
         }
     }
 }
