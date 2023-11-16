@@ -10,11 +10,13 @@ public class EnemyController : MonoBehaviour
     private float startPositionX;
     public float moveRange = 1.0f;
     private bool isMovingRight = false;
+    private BoxCollider2D enemyCollider;
 
     private void Awake()
     {
         //rigidBody = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        enemyCollider = GetComponent<BoxCollider2D>();
         startPositionX = this.transform.position.x;
     }
 
@@ -87,6 +89,7 @@ public class EnemyController : MonoBehaviour
             if (transform.position.y < other.gameObject.transform.position.y)
             {
                 animator.SetBool("isDead", true);
+                enemyCollider.enabled = false; // disabling to prevent from damaging player during death time
                 StartCoroutine(KillOnAnimationEnd());
             }
         }
