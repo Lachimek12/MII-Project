@@ -17,12 +17,10 @@ public class PlayerController : MonoBehaviour
     private bool isFacingRight = true;
     private int moveInputX = 0;
     private bool jumpInput = false;
-    private int score = 0;
     private int lives = 3;
     private Vector2 startPosition;
     private int keysFound = 0;
     private int keysNumber = 3;
-    public TMP_Text endGameText;
 
     private void Awake()
     {
@@ -40,22 +38,30 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+        if (GameManager.instance.currentGameState == GameState.GS_GAME)
         {
-            moveInputX = 1;
-        }
-        else if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
-        {
-            moveInputX = -1;
+            if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+            {
+                moveInputX = 1;
+            }
+            else if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+            {
+                moveInputX = -1;
+            }
+            else
+            {
+                moveInputX = 0;
+            }
+
+            if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space))
+            {
+                jumpInput = true;
+            }
         }
         else
         {
             moveInputX = 0;
-        }
-
-        if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space))
-        {
-            jumpInput = true;
+            jumpInput = false;
         }
     }
     void FixedUpdate()
@@ -124,8 +130,7 @@ public class PlayerController : MonoBehaviour
     {
         if (other.CompareTag("Bonus"))
         {
-            score += 1;
-            Debug.Log("Score " + score);
+            GameManager.instance.AddPoints(1);
             other.gameObject.SetActive(false);
         }
         else if (other.CompareTag("End-of-level"))
@@ -133,8 +138,6 @@ public class PlayerController : MonoBehaviour
             if (keysNumber == keysFound)
             {
                 Debug.Log("Wygrales");
-                endGameText.gameObject.SetActive(true);
-                endGameText.text = "Gratulacje, zdoby³eœ " + score.ToString() + " punktów!";
             }
             else
             {
@@ -145,8 +148,8 @@ public class PlayerController : MonoBehaviour
         {
             if (transform.position.y > other.gameObject.transform.position.y)
             {
-                score += 2;
-                Debug.Log("Killed an enemy");
+                GameManager.instance.AddPoints(2);
+                GameManager.instance.AddKill();
             }
             else
             {
@@ -155,24 +158,37 @@ public class PlayerController : MonoBehaviour
         }
         else if (other.CompareTag("Key"))
         {
+            GameManager.instance.AddKeys();
             keysFound++;
             other.gameObject.SetActive(false);
-            Debug.Log("Zebrano klucz");
         }
         else if (other.CompareTag("Heart"))
         {
+            GameManager.instance.AddLive();
             lives++;
             other.gameObject.SetActive(false);
-            Debug.Log("Zebrano HAPE");
         }
         else if (other.CompareTag("FallLevel"))
         {
             Death();
         }
+        else if (other.CompareTag("MovingPlatform"))
+        {
+            transform.SetParent(other.transform);
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("MovingPlatform"))
+        {
+            transform.SetParent(null);
+        }
     }
 
     private void Death()
     {
+        GameManager.instance.RemoveLive();
         lives--;
         rigidBody.velocity = new Vector2(0.0f, 0.0f);
         transform.position = startPosition;
