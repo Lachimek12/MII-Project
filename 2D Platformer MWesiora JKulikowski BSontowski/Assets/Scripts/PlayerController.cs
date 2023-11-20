@@ -112,6 +112,7 @@ public class PlayerController : MonoBehaviour
         }
         else if (canDoubleJump == true)
         {
+            rigidBody.velocity = rigidBody.velocity * new Vector2(1.0f, 0.0f);
             rigidBody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             canDoubleJump = false;
         }
