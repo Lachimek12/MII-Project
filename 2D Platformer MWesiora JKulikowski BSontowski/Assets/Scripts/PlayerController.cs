@@ -15,6 +15,7 @@ public class PlayerController : MonoBehaviour
     private Animator animator;
     private bool isWalking = false;
     private bool isFacingRight = true;
+    private bool isFalling = false;
     private int moveInputX = 0;
     private bool jumpInput = false;
     private int lives = 3;
@@ -91,6 +92,16 @@ public class PlayerController : MonoBehaviour
             jumpInput = false;
         }
 
+        if (rigidBody.velocity.y < -0.1f)
+        {
+            isFalling = true;
+        }
+        else
+        {
+            isFalling = false;
+        }
+
+        animator.SetBool("isFalling", isFalling);
         animator.SetBool("isGrounded", isGrounded());
         animator.SetBool("isWalking", isWalking);
 
