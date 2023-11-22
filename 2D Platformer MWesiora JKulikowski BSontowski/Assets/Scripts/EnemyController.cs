@@ -5,11 +5,11 @@ using UnityEngine;
 public class EnemyController : MonoBehaviour
 {
     [Range(0.01f, 20.0f)] [SerializeField] private float moveSpeed = 0.1f; //moving speed of the enemy
-    private bool isFacingRight = false;
+    [SerializeField] private bool isFacingRight = false;
+    [SerializeField] private bool isMovingRight = false;
     private Animator animator;
     private float startPositionX;
     public float moveRange = 1.0f;
-    private bool isMovingRight = false;
     private BoxCollider2D enemyCollider;
 
     private void Awake()
