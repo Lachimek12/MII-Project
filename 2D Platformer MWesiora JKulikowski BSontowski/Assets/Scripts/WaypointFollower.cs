@@ -19,7 +19,7 @@ public class WaypointFollower : MonoBehaviour
     }
 
     // Update is called once per frame
-    void FixedUpdate()
+    void Update()
     {
         float distance = Vector2.Distance(this.transform.position, waypoints[currentWaypoint].transform.position);
 
@@ -33,7 +33,7 @@ public class WaypointFollower : MonoBehaviour
         }
 
         this.transform.position = Vector2.MoveTowards(this.transform.position, 
-                                    waypoints[currentWaypoint].transform.position, speed * Time.fixedDeltaTime);
+                                    waypoints[currentWaypoint].transform.position, speed * Time.deltaTime);
 
     }
 }

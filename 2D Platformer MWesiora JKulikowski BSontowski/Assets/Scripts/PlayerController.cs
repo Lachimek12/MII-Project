@@ -186,6 +186,7 @@ public class PlayerController : MonoBehaviour
         }
         else if (other.CompareTag("MovingPlatform"))
         {
+            rigidBody.interpolation = RigidbodyInterpolation2D.None;
             transform.SetParent(other.transform);
         }
     }
@@ -194,6 +195,7 @@ public class PlayerController : MonoBehaviour
     {
         if (other.CompareTag("MovingPlatform"))
         {
+            rigidBody.interpolation = RigidbodyInterpolation2D.Interpolate;
             transform.SetParent(null);
         }
     }
