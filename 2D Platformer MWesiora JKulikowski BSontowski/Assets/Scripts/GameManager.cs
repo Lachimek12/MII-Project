@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour
     public static GameManager instance;
     public GameState currentGameState = GameState.GS_GAME;
     public Canvas inGameCanvas;
-    public TMP_Text scoreText;
+    public Text scoreText;
     private int score = 0;
     public Image[] keysTab;
     private int keysFound = 0;
@@ -107,9 +107,9 @@ public class GameManager : MonoBehaviour
         scoreText.text = score.ToString();
     }
 
-    public void AddKeys()
+    public void AddKeys(Color color)
     {
-        keysTab[keysFound].color = Color.white;
+        keysTab[keysFound].color = color;
         keysFound++;
     }
 

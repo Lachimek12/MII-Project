@@ -170,7 +170,7 @@ public class PlayerController : MonoBehaviour
         }
         else if (other.CompareTag("Key"))
         {
-            GameManager.instance.AddKeys();
+            GameManager.instance.AddKeys(other.GetComponent<SpriteRenderer>().color);
             keysFound++;
             other.gameObject.SetActive(false);
         }
