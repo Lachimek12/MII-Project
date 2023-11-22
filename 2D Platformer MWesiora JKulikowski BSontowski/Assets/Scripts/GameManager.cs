@@ -18,9 +18,9 @@ public class GameManager : MonoBehaviour
     private int keysFound = 0;
     public Image[] livesTab;
     private int lives = 3;
-    public TMP_Text timeText;
+    public Text timeText;
     private float timer = 0;
-    public TMP_Text killsText;
+    public Text killsText;
     private int kills = 0;
 
     private void Awake()
