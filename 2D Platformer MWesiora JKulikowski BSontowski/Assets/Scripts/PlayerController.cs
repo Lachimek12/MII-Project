@@ -22,7 +22,10 @@ public class PlayerController : MonoBehaviour
     private Vector2 startPosition;
     private int keysFound = 0;
     private int keysNumber = 3;
-
+    private bool dash = false;
+    private float dash_time = 0f;
+    private bool can_dash = false;
+    private Vector2 dash_vec;
     private void Awake()
     {
         rigidBody = GetComponent<Rigidbody2D>();
@@ -41,13 +44,21 @@ public class PlayerController : MonoBehaviour
     {
         if (GameManager.instance.currentGameState == GameState.GS_GAME)
         {
+            if (Input.GetKey(KeyCode.LeftShift) && can_dash && (!isGrounded()))
+            {
+                can_dash = false;
+                dash = true;
+            }
+
             if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
             {
                 moveInputX = 1;
+                dash_vec = new Vector2(1.0f, 0.0f);
             }
             else if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
             {
                 moveInputX = -1;
+                dash_vec = new Vector2(-1.0f, 0.0f);
             }
             else
             {
@@ -70,7 +81,23 @@ public class PlayerController : MonoBehaviour
         isWalking = false;
 
         Vector2 moveVectorX = new Vector2(1.0f, 0.0f);
-        rigidBody.velocity = rigidBody.velocity * new Vector2(0.0f, 1.0f) + moveVectorX * moveSpeed * moveInputX;
+        if (! (dash_time>0.0f) )
+        {
+            rigidBody.velocity = rigidBody.velocity * new Vector2(0.0f, 1.0f) + moveVectorX * moveSpeed * moveInputX;
+        }
+        
+        if(dash == true)
+        {
+            dash = false;
+            dash_time = 0.1f;
+        }
+
+        if(dash_time > 0.0f)
+        {
+            dash_time -= Time.fixedDeltaTime;
+            rigidBody.velocity = moveVectorX * 50.0f * dash_vec;
+        }
+
         if (moveInputX != 0)
         {
             isWalking = true;
@@ -119,6 +146,7 @@ public class PlayerController : MonoBehaviour
         {
             rigidBody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             canDoubleJump = true;
+            can_dash = true;
             //Debug.Log("jumpung");
         }
         else if (canDoubleJump == true)
