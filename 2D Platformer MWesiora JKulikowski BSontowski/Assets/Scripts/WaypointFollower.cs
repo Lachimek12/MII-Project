@@ -7,11 +7,7 @@ public class WaypointFollower : MonoBehaviour
     [SerializeField] private GameObject[] waypoints;
     private int currentWaypoint = 0;
     [SerializeField] private float speed = 1.0f;
-    private Rigidbody2D rigidBody;
-    private void Awake()
-    {
-        rigidBody = GetComponent<Rigidbody2D>();
-    }
+	
     // Start is called before the first frame update
     void Start()
     {

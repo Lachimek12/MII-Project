@@ -89,6 +89,7 @@ public class EnemyController : MonoBehaviour
             if (transform.position.y < other.gameObject.transform.position.y)
             {
                 animator.SetBool("isDead", true);
+                moveSpeed = 0;
                 enemyCollider.enabled = false; // disabling to prevent from damaging player during death time
                 StartCoroutine(KillOnAnimationEnd());
             }
