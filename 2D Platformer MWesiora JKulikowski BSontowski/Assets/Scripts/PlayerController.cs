@@ -5,23 +5,69 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("Movement parameters")]
-    [Range(0.01f, 20.0f)][SerializeField] private float moveSpeed = 0.1f; //moving speed of the player
-    [Range(0.01f, 20.0f)][SerializeField] private float jumpForce = 6.0f;
+
+    public PlayerRunData Data;
+
+
+    #region COMPONENTS
     private Rigidbody2D rigidBody;
-    public LayerMask groundLayer;
-    const float rayLength = 1.5f;
-    private bool canDoubleJump = true;
-    private Animator animator;
-    private bool isWalking = false;
-    private bool isFacingRight = true;
-    private bool isFalling = false;
-    private int moveInputX = 0;
-    private bool jumpInput = false;
-    private int lives = 3;
-    private Vector2 startPosition;
-    private int keysFound = 0;
-    private int keysNumber = 3;
+        private Animator animator;
+    #endregion
+
+    #region STATE PARAMETERS
+        private bool isWalking = false;
+        private bool isFacingRight = true;
+        private bool isFalling = false;
+        public float LastOnGroundTime;
+    #endregion
+
+
+    #region MOVEMENT PARAMETERS
+    [Header("Movement")]
+        [SerializeField] private float moveSpeed = 0.1f; //moving speed of the player
+        [SerializeField] private float acceleration = 0.5f;
+        [SerializeField] private float decceleration = 0.5f;
+        [SerializeField] private float velPower = 0.5f;
+        [SerializeField] private float frictionAmount = 0.5f;
+
+    [Header("Jumping")]
+        [SerializeField] private float jumpForce = 6.0f;
+        [SerializeField] private float cayoteTime = 0.1f;
+
+        private float lastJumpTime;
+        private bool jumpInputReleased;
+        private bool isJumping = false;
+
+        private bool jumpInput = false;
+        private bool canDoubleJump = true;
+        const float rayLength = 1.5f;
+        private int moveInputX = 0;
+
+    [Header("Gravity")]
+        [SerializeField] private float gravityScale = 6.0f;
+        [SerializeField] private float fallGravityMultiplier = 6.0f;
+    #endregion
+
+
+    #region CHECK PARAMETERS
+        [Header("Checks")]
+        [SerializeField] private Transform groundCheckPoint;
+        [SerializeField] private Vector2 groundCheckSize = new Vector2(0.7783947f, 0.03f);
+    #endregion
+
+    #region LAYERS & TAGS
+    [Header("layers & tags")]
+        [SerializeField] private LayerMask groundLayer;
+    #endregion
+
+    #region GAME STATE
+        private Vector2 startPosition;
+        private int lives = 3;
+        private int keysFound = 0;
+        private int keysNumber = 3;
+    #endregion
+
+
 
     private void Awake()
     {
@@ -33,12 +79,15 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
     }
 
     // Update is called once per frame
     void Update()
     {
+
+        LastOnGroundTime -= Time.deltaTime;
+        lastJumpTime -= Time.deltaTime;
+
         if (GameManager.instance.currentGameState == GameState.GS_GAME)
         {
             if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
@@ -64,17 +113,38 @@ public class PlayerController : MonoBehaviour
             moveInputX = 0;
             jumpInput = false;
         }
+
+        if (isGrounded())
+        {
+            isJumping = false;
+            LastOnGroundTime = cayoteTime;
+        }
+
+        if (rigidBody.velocity.y < 0)
+        {
+            rigidBody.gravityScale = gravityScale * fallGravityMultiplier;
+        }
+        else
+        {
+            rigidBody.gravityScale = gravityScale;
+        }
+
+        if (isJumping && Mathf.Abs(rigidBody.velocity.y) >= 0.4f)
+        {
+            rigidBody.gravityScale = gravityScale * 0.75f;
+        }
+
+
     }
     void FixedUpdate()
     {
-        isWalking = false;
 
-        Vector2 moveVectorX = new Vector2(1.0f, 0.0f);
-        rigidBody.velocity = rigidBody.velocity * new Vector2(0.0f, 1.0f) + moveVectorX * moveSpeed * moveInputX;
-        if (moveInputX != 0)
-        {
-            isWalking = true;
-        }
+        Run();
+
+        //Vector2 moveVectorX = new Vector2(1.0f, 0.0f);
+        // rigidBody.velocity = rigidBody.velocity * new Vector2(0.0f, 1.0f) + moveVectorX * moveSpeed * moveInputX;
+        isWalking = Mathf.Abs(rigidBody.velocity.x) >= 0.01;
+
 
         if (!isFacingRight && moveInputX > 0)
         {
@@ -92,30 +162,110 @@ public class PlayerController : MonoBehaviour
             jumpInput = false;
         }
 
-        if (rigidBody.velocity.y < -0.1f)
-        {
-            isFalling = true;
-        }
-        else
-        {
-            isFalling = false;
-        }
+        isFalling = rigidBody.velocity.y < -0.1f;
+
 
         animator.SetBool("isFalling", isFalling);
         animator.SetBool("isGrounded", isGrounded());
         animator.SetBool("isWalking", isWalking);
 
         //Debug.DrawRay(transform.position, rayLength * Vector3.down, Color.white, 1.0f, false);
+
     }
+
+    void Run()
+    {
+
+        float targetSpeed = moveInputX * moveSpeed;
+
+        float speedDif = targetSpeed - rigidBody.velocity.x;
+
+        float accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? acceleration : decceleration;
+
+        float movement = Mathf.Pow(Mathf.Abs(speedDif) * accelRate, velPower) * Mathf.Sign(speedDif);
+
+        rigidBody.AddForce(movement * Vector2.right);
+
+
+        #region Friction
+        if (LastOnGroundTime > 0 && moveInputX != 0 )
+        {
+            float amount = Mathf.Min(Mathf.Abs(rigidBody.velocity.x), Mathf.Abs(frictionAmount));
+
+            amount *= Mathf.Sign(rigidBody.velocity.x);
+
+            rigidBody.AddForce(Vector2.right * -amount, ForceMode2D.Impulse);
+        }
+        #endregion
+
+        /*
+        float targetSpeed = moveInputX * runMaxSpeed;
+
+        float accelRate;
+
+        //Gets an acceleration value based on if we are accelerating (includes turning) 
+        //or trying to decelerate (stop). As well as applying a multiplier if we're air borne.
+        if (LastOnGroundTime > 0)
+        {
+            accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? runAccelAmount : runDeccelAmount;
+        }
+        else
+        {
+            accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? runAccelAmount * accelInAir : runDeccelAmount * deccelInAir;
+        }
+
+
+        if (doConserveMomentum && Mathf.Abs(rigidBody.velocity.x) > Mathf.Abs(targetSpeed) && Mathf.Sign(rigidBody.velocity.x) == Mathf.Sign(targetSpeed) && Mathf.Abs(targetSpeed) > 0.01f && LastOnGroundTime < 0)
+        {
+            //Prevent any deceleration from happening, or in other words conserve are current momentum
+            //You could experiment with allowing for the player to slightly increae their speed whilst in this "state"
+            accelRate = 0;
+        }
+
+        float speedDif = targetSpeed - rigidBody.velocity.x;
+
+        float movement = speedDif * accelRate;
+
+        rigidBody.AddForce(movement * Vector2.right, ForceMode2D.Force);
+
+        */
+
+    }
+
 
     bool isGrounded()
     {
-        return Physics2D.Raycast(transform.position, Vector2.down, rayLength, groundLayer.value);
+        return Physics2D.OverlapBox(groundCheckPoint.position, groundCheckSize, 0, groundLayer);
     }
 
     void Jump()
     {
-        if (isGrounded())
+       // Debug.Log(LastOnGroundTime);
+        if ((isGrounded() && !isJumping) || (LastOnGroundTime > 0 && !isJumping))
+        {
+            rigidBody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            LastOnGroundTime = 0;
+            lastJumpTime = 0;
+            isJumping = true;
+            jumpInputReleased = true;
+            canDoubleJump = true;
+
+        }
+        else if (canDoubleJump)
+        {
+            float velocityY = rigidBody.velocity.y;
+            rigidBody.velocity = Vector2.right * rigidBody.velocity;
+
+            if (velocityY > 0.1)
+            {
+                Debug.Log(100);
+                rigidBody.velocity = rigidBody.velocity + new Vector2(0, 0.1f);
+            }
+            Debug.Log(rigidBody.velocity.y);
+            rigidBody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            canDoubleJump = false;
+        }
+        /*if (isGrounded())
         {
             rigidBody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             canDoubleJump = true;
@@ -126,7 +276,7 @@ public class PlayerController : MonoBehaviour
             rigidBody.velocity = rigidBody.velocity * new Vector2(1.0f, 0.0f);
             rigidBody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             canDoubleJump = false;
-        }
+        }*/
     }
 
     void Flip()
