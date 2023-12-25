@@ -8,9 +8,17 @@ public class PlayerController : MonoBehaviour
 
     public PlayerRunData Data;
 
-
     #region COMPONENTS
-    private Rigidbody2D rigidBody;
+        [SerializeField] private AudioClip coinSound;
+        [SerializeField] private AudioClip keySound;
+        [SerializeField] private AudioClip heartSound;
+        [SerializeField] private AudioClip hurtSound;
+        [SerializeField] private AudioClip endOfLevelSound;
+        [SerializeField] private AudioClip killSound;
+        [SerializeField] private AudioClip gameOverSound;
+        [SerializeField] private AudioClip jumpSound;
+        private AudioSource source;
+        private Rigidbody2D rigidBody;
         private Animator animator;
     #endregion
 
@@ -73,6 +81,7 @@ public class PlayerController : MonoBehaviour
     {
         rigidBody = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        source = GetComponent<AudioSource>();
         startPosition = transform.position;
     }
 
@@ -103,7 +112,7 @@ public class PlayerController : MonoBehaviour
                 moveInputX = 0;
             }
 
-            if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space))
+            if (Input.GetKeyDown(KeyCode.Space))
             {
                 jumpInput = true;
             }
@@ -267,12 +276,14 @@ public class PlayerController : MonoBehaviour
         }
         /*if (isGrounded())
         {
+            source.PlayOneShot(jumpSound, AudioListener.volume);
             rigidBody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             canDoubleJump = true;
             //Debug.Log("jumpung");
         }
         else if (canDoubleJump == true)
         {
+            source.PlayOneShot(jumpSound, AudioListener.volume);
             rigidBody.velocity = rigidBody.velocity * new Vector2(1.0f, 0.0f);
             rigidBody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             canDoubleJump = false;
@@ -292,6 +303,7 @@ public class PlayerController : MonoBehaviour
     {
         if (other.CompareTag("Bonus"))
         {
+            source.PlayOneShot(coinSound, AudioListener.volume);
             GameManager.instance.AddPoints(1);
             other.gameObject.SetActive(false);
         }
@@ -299,7 +311,9 @@ public class PlayerController : MonoBehaviour
         {
             if (keysNumber == keysFound)
             {
-                Debug.Log("Wygrales");
+                source.PlayOneShot(endOfLevelSound, AudioListener.volume);
+                GameManager.instance.AddPoints(100 * lives);
+                GameManager.instance.LevelCompleted();
             }
             else
             {
@@ -310,6 +324,7 @@ public class PlayerController : MonoBehaviour
         {
             if (transform.position.y > other.gameObject.transform.position.y)
             {
+                source.PlayOneShot(killSound, AudioListener.volume);
                 GameManager.instance.AddPoints(2);
                 GameManager.instance.AddKill();
             }
@@ -320,12 +335,14 @@ public class PlayerController : MonoBehaviour
         }
         else if (other.CompareTag("Key"))
         {
+            source.PlayOneShot(keySound, AudioListener.volume);
             GameManager.instance.AddKeys(other.GetComponent<SpriteRenderer>().color);
             keysFound++;
             other.gameObject.SetActive(false);
         }
         else if (other.CompareTag("Heart"))
         {
+            source.PlayOneShot(heartSound, AudioListener.volume);
             GameManager.instance.AddLive();
             lives++;
             other.gameObject.SetActive(false);
@@ -352,13 +369,15 @@ public class PlayerController : MonoBehaviour
 
     private void Death()
     {
+        source.PlayOneShot(hurtSound, AudioListener.volume);
         GameManager.instance.RemoveLive();
         lives--;
         rigidBody.velocity = new Vector2(0.0f, 0.0f);
         transform.position = startPosition;
         if (lives <= 0)
         {
-            Debug.Log("Umarl smiercia tera-giczna");
+            source.PlayOneShot(gameOverSound, AudioListener.volume);
+            GameManager.instance.GameOver();
         }
     }
 }

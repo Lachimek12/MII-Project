@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
-using TMPro;
+using UnityEngine.SceneManagement;
 
-public enum GameState { GS_PAUSEMENU, GS_GAME, GS_LEVELCOMPLETED, GS_GAME_OVER }
+public enum GameState { GS_PAUSEMENU, GS_GAME, GS_LEVELCOMPLETED, GS_GAME_OVER, GS_OPTIONS }
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
-    public GameState currentGameState = GameState.GS_GAME;
-    public Canvas inGameCanvas;
+    public GameState currentGameState;
+    public GameObject inGameCanvas;
     public Text scoreText;
     private int score = 0;
     public Image[] keysTab;
@@ -22,10 +22,23 @@ public class GameManager : MonoBehaviour
     private float timer = 0;
     public Text killsText;
     private int kills = 0;
+    public GameObject pauseMenuCanvas;
+    public GameObject levelCompletedCanvas;
+    public GameObject opstionsCanvas;
+    public GameObject gameOverCanvas;
+    private const string keyHighScore = "HighScoreLevel1";
+    public Text scoreTextCompleted;
+    public Text highScoreText;
+    public Text qualityText;
 
     private void Awake()
     {
         instance = this;
+
+        if (!PlayerPrefs.HasKey(keyHighScore))
+        { 
+            PlayerPrefs.SetInt(keyHighScore, 0);
+        }
 
         scoreText.text = score.ToString();
         for (int i = 0; i < keysTab.Length; i++)
@@ -35,6 +48,9 @@ public class GameManager : MonoBehaviour
         livesTab[3].enabled = false;
         timeText.text = string.Format("{0:00}:{1:00}", 0, 0);
         killsText.text = kills.ToString();
+        qualityText.text = "Quality: " + QualitySettings.names[QualitySettings.GetQualityLevel()];
+
+        InGame();
     }
 
     // Start is called before the first frame update
@@ -52,7 +68,7 @@ public class GameManager : MonoBehaviour
             {
                 InGame();
             }
-            else
+            else if (currentGameState == GameState.GS_GAME)
             { 
                 PauseMenu();
             }
@@ -71,13 +87,38 @@ public class GameManager : MonoBehaviour
     {
         currentGameState = newGameState;
 
-        if (currentGameState == GameState.GS_GAME)
+        inGameCanvas.SetActive(currentGameState == GameState.GS_GAME);
+        pauseMenuCanvas.SetActive(currentGameState == GameState.GS_PAUSEMENU);
+        levelCompletedCanvas.SetActive(currentGameState == GameState.GS_LEVELCOMPLETED);
+        opstionsCanvas.SetActive(currentGameState == GameState.GS_OPTIONS);
+        gameOverCanvas.SetActive(currentGameState == GameState.GS_GAME_OVER);
+
+        if (newGameState == GameState.GS_LEVELCOMPLETED)
         { 
-            inGameCanvas.enabled = true;
+            Scene currentScene = SceneManager.GetActiveScene();
+
+            if (currentScene.name == "Level1")
+            {
+                int highScore = PlayerPrefs.GetInt(keyHighScore);
+
+                if (highScore < score)
+                { 
+                    highScore = score;
+                    PlayerPrefs.SetInt(keyHighScore, highScore);
+                }
+
+                scoreTextCompleted.text = "Your score = " + score;
+                highScoreText.text = "The best score = " + highScore;
+            }
         }
-        else 
-        { 
-            inGameCanvas.enabled = false; 
+
+        if (newGameState == GameState.GS_OPTIONS || currentGameState == GameState.GS_PAUSEMENU)
+        {
+            Time.timeScale = 0;
+        }
+        else
+        {
+            Time.timeScale = 1;
         }
     }
 
@@ -99,6 +140,11 @@ public class GameManager : MonoBehaviour
     public void GameOver() 
     {
         SetGameState(GameState.GS_GAME_OVER);
+    }
+
+    public void Options()
+    {
+        SetGameState(GameState.GS_OPTIONS);
     }
 
     public void AddPoints(int points)
@@ -132,5 +178,42 @@ public class GameManager : MonoBehaviour
     {
         kills++;
         killsText.text = kills.ToString();
+    }
+
+    public void OnResumeButtonClicked()
+    {
+        InGame();
+    }
+
+    public void OnRestartButtonClicked()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void OnReturnToMainMenuButtonClicked()
+    {
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    public void OnOptionsButtonClicked()
+    {
+        Options();
+    }
+
+    public void IncreaseQuality()
+    { 
+        QualitySettings.IncreaseLevel();
+        qualityText.text = "Quality: " + QualitySettings.names[QualitySettings.GetQualityLevel()];
+    }
+
+    public void DecreaseQuality()
+    { 
+        QualitySettings.DecreaseLevel();
+        qualityText.text = "Quality: " + QualitySettings.names[QualitySettings.GetQualityLevel()];
+    }
+
+    public void SetVolume(Slider slider)
+    {
+        AudioListener.volume = slider.value;
     }
 }
