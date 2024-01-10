@@ -388,7 +388,13 @@ namespace _188898
             GameManager.instance.RemoveLive();
             lives--;
             rigidBody.velocity = new Vector2(0.0f, 0.0f);
-            transform.position = startPosition;
+            if (transform.position.x <= 88) {
+                transform.position = startPosition;
+            }
+            else
+            {
+                transform.position = new Vector3(88.0f, 7.0f, 0.0f);
+            }
             if (lives <= 0)
             {
                 source.PlayOneShot(gameOverSound, AudioListener.volume);
