@@ -24,6 +24,7 @@ namespace _188898
         private float timer = 0;
         public Text killsText;
         private int kills = 0;
+        public GameObject cannotFinishText;
         public GameObject pauseMenuCanvas;
         public GameObject levelCompletedCanvas;
         public GameObject opstionsCanvas;
@@ -32,6 +33,7 @@ namespace _188898
         public Text scoreTextCompleted;
         public Text highScoreText;
         public Text qualityText;
+        public bool coroutineRunning = false;
 
         private void Awake()
         {
@@ -101,6 +103,12 @@ namespace _188898
 
                 if (currentScene.name == "188898")
                 {
+                    int timeBonus = 300 - ((int)(timer / 60) * 60 + (int)(timer % 60));
+                    if (timeBonus > 0)
+                    {
+                        score += timeBonus;
+                    }
+
                     int highScore = PlayerPrefs.GetInt(keyHighScore);
 
                     if (highScore < score)
@@ -227,6 +235,15 @@ namespace _188898
         public void SetVolume(Slider slider)
         {
             AudioListener.volume = slider.value;
+        }
+
+        public IEnumerator NotEnoughGems()
+        {
+            coroutineRunning = true;
+            cannotFinishText.SetActive(true);
+            yield return new WaitForSeconds(5.0f);
+            cannotFinishText.SetActive(false);
+            coroutineRunning = false;
         }
     }
 }

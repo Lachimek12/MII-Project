@@ -10,7 +10,7 @@ namespace _188898
         // Start is called before the first frame update
         void Start()
         {
-
+            AudioListener.volume = 0.05f;
         }
 
         // Update is called once per frame

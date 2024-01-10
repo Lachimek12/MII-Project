@@ -324,9 +324,9 @@ namespace _188898
                     GameManager.instance.AddPoints(100 * lives);
                     GameManager.instance.LevelCompleted();
                 }
-                else
+                else if (!GameManager.instance.coroutineRunning)
                 {
-                    Debug.Log("za malo kluczy");
+                    StartCoroutine(GameManager.instance.NotEnoughGems());
                 }
             }
             else if (other.CompareTag("Enemy"))
@@ -351,10 +351,13 @@ namespace _188898
             }
             else if (other.CompareTag("Heart"))
             {
-                source.PlayOneShot(heartSound, AudioListener.volume);
-                GameManager.instance.AddLive();
-                lives++;
-                other.gameObject.SetActive(false);
+                if (lives < 4)
+                {
+                    source.PlayOneShot(heartSound, AudioListener.volume);
+                    GameManager.instance.AddLive();
+                    lives++;
+                    other.gameObject.SetActive(false);
+                }
             }
             else if (other.CompareTag("BouncePad"))
             {

@@ -875,7 +875,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1561206380193595351, guid: b6538babdef65d643848104b76174060, type: 3}
       propertyPath: m_Text
-      value: Level 2
+      value: Grupa 125
       objectReference: {fileID: 0}
     - target: {fileID: 9013844178954133501, guid: b6538babdef65d643848104b76174060, type: 3}
       propertyPath: m_Pivot.x
