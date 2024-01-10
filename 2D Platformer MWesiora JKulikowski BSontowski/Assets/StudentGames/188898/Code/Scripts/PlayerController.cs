@@ -28,6 +28,7 @@ namespace _188898
         private bool isWalking = false;
         private bool isFacingRight = true;
         private bool isFalling = false;
+        private bool isBounce = false;
         public float LastOnGroundTime;
         #endregion
 
@@ -149,8 +150,15 @@ namespace _188898
         }
         void FixedUpdate()
         {
+            if (isBounce == false)
+            {
+                Run();
+            }
+            if (isGrounded())
+            {
+                isBounce = false;
+            }
 
-            Run();
 
             //Vector2 moveVectorX = new Vector2(1.0f, 0.0f);
             // rigidBody.velocity = rigidBody.velocity * new Vector2(0.0f, 1.0f) + moveVectorX * moveSpeed * moveInputX;
@@ -186,7 +194,6 @@ namespace _188898
 
         void Run()
         {
-
             float targetSpeed = moveInputX * moveSpeed;
 
             float speedDif = targetSpeed - rigidBody.velocity.x;
@@ -348,6 +355,12 @@ namespace _188898
                 GameManager.instance.AddLive();
                 lives++;
                 other.gameObject.SetActive(false);
+            }
+            else if (other.CompareTag("BouncePad"))
+            {
+                Debug.Log(2.0f * jumpForce * Mathf.Cos(other.gameObject.transform.rotation.eulerAngles.z * Mathf.Deg2Rad));
+                rigidBody.velocity = new Vector2(2.0f * jumpForce * Mathf.Sin(-other.gameObject.transform.rotation.eulerAngles.z * Mathf.Deg2Rad), 2.0f * jumpForce * Mathf.Cos(-other.gameObject.transform.rotation.eulerAngles.z * Mathf.Deg2Rad));
+                if (other.gameObject.transform.rotation.eulerAngles.z != 0) isBounce = true;
             }
             else if (other.CompareTag("FallLevel"))
             {

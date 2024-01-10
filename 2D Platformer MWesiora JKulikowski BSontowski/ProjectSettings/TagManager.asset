@@ -11,6 +11,7 @@ TagManager:
   - Heart
   - FallLevel
   - MovingPlatform
+  - BouncePad
   layers:
   - Default
   - TransparentFX
